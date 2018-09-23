@@ -4,18 +4,23 @@ import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.Java2DFrameConverter;
 import service.FileService;
-import service.util.Static;
+import util.GifSequenceWriter;
+import util.Static;
 
 import javax.imageio.ImageIO;
+import javax.imageio.stream.FileImageOutputStream;
+import javax.imageio.stream.ImageOutputStream;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FileServiceImpl implements FileService {
 
     /**
      * Convert movie to multiple jpeg frames
      * @param moviePath
-     * @param frameJump
+     * @param frameJump number of frames to skip per recorded frame
      */
     public void convertMovieToJpg(String moviePath, int frameJump) throws Exception {
         Java2DFrameConverter converter = new Java2DFrameConverter();
@@ -26,7 +31,7 @@ public class FileServiceImpl implements FileService {
         Frame frame;
         int imgNum = 0;
         System.out.println("Video has " + frameGrabber.getLengthInFrames() +
-                            " frames and " + frameGrabber.getFrameRate() + " framerate");
+                            " frames and " + frameGrabber.getFrameRate() + " fps");
 
         try {
             for (int i = 1; i <= frameGrabber.getLengthInFrames(); i++) {
@@ -40,6 +45,40 @@ public class FileServiceImpl implements FileService {
                 i += frameJump;
             }
             frameGrabber.stop();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Convert existing frames to gif
+     * @param framePath
+     * @param targetFileName gif name input
+     */
+    public void convertFramesToGif(String framePath, String targetFileName) {
+        File frameFolder = new File(framePath);
+        File targetGif = new File(Static.IMAGE_PATH + targetFileName);
+        List<BufferedImage> bufferedImageList = new ArrayList<BufferedImage>();
+
+        File[] frames = frameFolder.listFiles();
+
+        try {
+            for (File frame : frames) {
+                if (frame.isFile()) {
+                    BufferedImage currentFrame = ImageIO.read(frame);
+                    bufferedImageList.add(currentFrame);
+                }
+            }
+
+            int intImageType = bufferedImageList.get(0).getType();
+            ImageOutputStream output = new FileImageOutputStream(targetGif);
+            GifSequenceWriter writer = new GifSequenceWriter(output, intImageType, 0, false);
+
+            for (BufferedImage frame : bufferedImageList)
+                writer.writeToSequence(frame);
+
+            writer.close();
+            output.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
