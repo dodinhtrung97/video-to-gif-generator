@@ -8,5 +8,11 @@
     <artifactId>muic.backend.project1.milestone1</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-
+    <dependencies>
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>javacv</artifactId>
+            <version>1.0</version>
+        </dependency>
+    </dependencies>
 </project>
