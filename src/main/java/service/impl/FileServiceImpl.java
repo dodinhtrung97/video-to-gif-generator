@@ -3,6 +3,7 @@ package service.impl;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.Java2DFrameConverter;
+import org.imgscalr.Scalr;
 import service.FileService;
 import util.GifSequenceWriter;
 import util.Static;
@@ -30,19 +31,29 @@ public class FileServiceImpl implements FileService {
 
         Frame frame;
         int imgNum = 0;
+        int startRecordingAt;
+
+        if (frameGrabber.getLengthInFrames() > 900)
+            startRecordingAt = (frameGrabber.getLengthInFrames()*2) / 3;
+        else
+            startRecordingAt = 0;
+
         System.out.println("Video has " + frameGrabber.getLengthInFrames() +
                             " frames and " + frameGrabber.getFrameRate() + " fps");
 
         try {
-            for (int i = 1; i <= frameGrabber.getLengthInFrames(); i++) {
+            for (int i = startRecordingAt; i <= frameGrabber.getLengthInFrames(); i++) {
                 imgNum++;
                 frameGrabber.setFrameNumber(i);
                 frame = frameGrabber.grab();
-                BufferedImage bufferedImage = converter.convert(frame);
 
-                String path = Static.IMAGE_PATH + File.separator + imgNum + Static.IMAGE_SUFFIX;
-                ImageIO.write(bufferedImage, Static.IMAGE_TYPE, new File(path));
+                BufferedImage bufferedImage = this.scaleFrame(420, 360, converter.convert(frame));
+
+                String framePath = Static.IMAGE_PATH + File.separator + imgNum + Static.IMAGE_SUFFIX;
+                ImageIO.write(bufferedImage, Static.IMAGE_TYPE, new File(framePath));
                 i += frameJump;
+
+                if (imgNum >= 200) break;
             }
             frameGrabber.stop();
         } catch (Exception e) {
@@ -82,5 +93,18 @@ public class FileServiceImpl implements FileService {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Scale collected frame
+     * @param scaleX
+     * @param scaleY
+     * @param frame
+     * @return
+     */
+    private BufferedImage scaleFrame(int scaleX, int scaleY, BufferedImage frame) {
+        BufferedImage bufferedImage = Scalr.resize(frame, Scalr.Method.BALANCED, scaleX, scaleY);
+
+        return bufferedImage;
     }
 }

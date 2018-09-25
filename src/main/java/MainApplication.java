@@ -15,7 +15,7 @@ public class MainApplication {
         try {
             // For testing purposes
             FileUtils.cleanDirectory(imageFolder);
-            fileService.convertMovieToJpg("D:\\Mahidol\\proj1-test.mp4", 0);
+            fileService.convertMovieToJpg("D:\\Video\\Cover\\情熱エクスタシー.mp4", 0);
             fileService.convertFramesToGif(Static.IMAGE_PATH, "test.gif");
         } catch (Exception e) {
             e.printStackTrace();
