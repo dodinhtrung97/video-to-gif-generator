@@ -36,7 +36,7 @@ public class FileServiceImpl implements FileService {
         if (frameGrabber.getLengthInFrames() > 900)
             startRecordingAt = (frameGrabber.getLengthInFrames()*2) / 3;
         else
-            startRecordingAt = 0;
+            startRecordingAt = 1;
 
         System.out.println("Video has " + frameGrabber.getLengthInFrames() +
                             " frames and " + frameGrabber.getFrameRate() + " fps");
