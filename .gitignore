@@ -15,6 +15,7 @@ lib/*
 .idea/**/tasks.xml
 .idea/dictionaries
 account.txt
+test-project1.mp4
 # Sensitive or high-churn objects:
 .idea/**/dataSources/
 .idea/**/dataSources.ids
