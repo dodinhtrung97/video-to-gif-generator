@@ -1,34 +1,84 @@
-import org.apache.commons.io.FileUtils;
+import com.rabbitmq.client.*;
+import entity.RequestBody;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import service.FileService;
 import service.impl.FileServiceImpl;
-import util.Static;
+import util.Constant;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 
 public class MainApplication {
 
-    public static void main(String[] args) throws IOException {
-        FileService fileService = new FileServiceImpl();
+    public static void main(String[] args) throws Exception {
+        System.out.println("Worker started");
+        Thread.sleep(5000);
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        String line = reader.readLine();
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost("localhost");
+        Connection connection = factory.newConnection();
+        Channel channel = connection.createChannel();
 
-        String[] inputs = line.trim().split("\\s+");
-        String sourceFile = inputs[0];
-        String outputGif = inputs[1];
+        channel.queueDeclare(Constant.QUEUE_NAME, false, false, false, null);
 
-        File imageFolder = new File(Static.IMAGE_PATH);
+        Consumer consumer = new DefaultConsumer(channel) {
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope,
+                                       AMQP.BasicProperties properties, byte[] body) throws IOException {
+                String message = new String(body, "UTF-8");
+                System.out.println(" [x] Received '" + message + "'");
+                this.parseInput(message);
+            }
 
-        try {
-            // For testing purposes
-            FileUtils.cleanDirectory(imageFolder);
-            fileService.convertMovieToJpg(sourceFile, 1);
-            fileService.convertFramesToGif(Static.IMAGE_PATH, outputGif);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            /**
+             * Parse json request and do work
+             * @param jsonRequest
+             */
+            public void parseInput(String jsonRequest) {
+                JSONParser parser = new JSONParser();
+                JSONObject jsonObject = new JSONObject();
+
+                try {
+                    jsonObject = (JSONObject) parser.parse(jsonRequest);
+                } catch (ParseException e) {
+                    System.out.println("Failed to digest request");
+                }
+
+                String srcHost = jsonObject.get("srcHost").toString();
+                String srctBucketName = jsonObject.get("srctBucketName").toString();
+                String srcObjectName = jsonObject.get("srcObjectName").toString();
+                String destHost = jsonObject.get("destBucketName").toString();
+                String destBucketName = jsonObject.get("destBucketName").toString();
+                String destObjectName = jsonObject.get("destObjectName").toString();
+
+                RequestBody requestBody = new RequestBody(srcHost, srctBucketName, srcObjectName,
+                        destHost, destBucketName, destObjectName);
+
+                this.generateGif(requestBody);
+            }
+
+            /**
+             * Generate gif by request
+             * @param request
+             */
+            public void generateGif(RequestBody request) {
+                FileService fileService = new FileServiceImpl();
+
+                String videoDir = fileService.downloadFile(request.getSrcHost(), request.getSrcBucketName(), request.getSrcObjectName());
+                try {
+                    fileService.convertVideoToJpg(request.getDestBucketName(), videoDir, 0);
+                    fileService.convertFramesToGif(request.getDestBucketName(), request.getDestObjectName());
+                } catch (Exception e) {
+                    System.out.println("Failed to convert video!!");
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        channel.basicConsume(Constant.QUEUE_NAME, true, consumer);
     }
+
+
+
 }

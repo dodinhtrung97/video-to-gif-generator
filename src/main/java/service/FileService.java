@@ -3,16 +3,26 @@ package service;
 public interface FileService {
 
     /**
-     * Convert movie to jpg (predefined dest folder)
-     * @param moviePath
-     * @param frameJump
+     * Download video file
+     * @param host
+     * @param bucketName
+     * @param objectName
+     * @return downloaded file directory
      */
-    void convertMovieToJpg(String moviePath, int frameJump) throws Exception;
+    String downloadFile(String host, String bucketName, String objectName);
+
+    /**
+     * Convert movie to multiple jpeg frames
+     * @param destBucketName
+     * @param videoPath
+     * @param frameJump number of frames to skip per recorded frame
+     */
+    public void convertVideoToJpg(String destBucketName, String videoPath, int frameJump) throws Exception;
 
     /**
      * Convert existing frames to gif
-     * @param framePath
+     * @param destBucketName
      * @param targetFileName gif name input
      */
-    void convertFramesToGif(String framePath, String targetFileName);
+    public void convertFramesToGif(String destBucketName, String targetFileName);
 }
