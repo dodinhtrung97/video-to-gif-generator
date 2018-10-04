@@ -111,7 +111,7 @@ public class FileServiceImpl implements FileService {
      * @param destBucketName
      * @param targetFileName gif name input
      */
-    public void convertFramesToGif(String destBucketName, String targetFileName) {
+    public String convertFramesToGif(String destBucketName, String targetFileName) {
         String framePath = Constant.BASE_PATH + destBucketName + File.separator + Constant.IMAGE_PATH;
         String targetDir = Constant.BASE_PATH + destBucketName;
 
@@ -144,6 +144,8 @@ public class FileServiceImpl implements FileService {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        return targetDir + File.separator + targetFileName;
     }
 
     /**

@@ -4,7 +4,9 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import service.FileService;
+import service.FileUploadService;
 import service.impl.FileServiceImpl;
+import service.impl.FileUploadServiceImpl;
 import util.Constant;
 
 import java.io.IOException;
@@ -23,6 +25,9 @@ public class MainApplication {
         channel.queueDeclare(Constant.QUEUE_NAME, false, false, false, null);
 
         Consumer consumer = new DefaultConsumer(channel) {
+
+            FileUploadService fileUploadService = new FileUploadServiceImpl();
+
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope,
                                        AMQP.BasicProperties properties, byte[] body) throws IOException {
@@ -35,7 +40,7 @@ public class MainApplication {
              * Parse json request and do work
              * @param jsonRequest
              */
-            public void parseInput(String jsonRequest) {
+            public void parseInput(String jsonRequest) throws IOException {
                 JSONParser parser = new JSONParser();
                 JSONObject jsonObject = new JSONObject();
 
@@ -62,16 +67,24 @@ public class MainApplication {
              * Generate gif by request
              * @param request
              */
-            public void generateGif(RequestBody request) {
+            public void generateGif(RequestBody request) throws IOException {
                 FileService fileService = new FileServiceImpl();
+                String filePath = null;
 
                 String videoDir = fileService.downloadFile(request.getSrcHost(), request.getSrcBucketName(), request.getSrcObjectName());
                 try {
                     fileService.convertVideoToJpg(request.getDestBucketName(), videoDir, 0);
-                    fileService.convertFramesToGif(request.getDestBucketName(), request.getDestObjectName());
+                    filePath = fileService.convertFramesToGif(request.getDestBucketName(), request.getDestObjectName());
                 } catch (Exception e) {
                     System.out.println("Failed to convert video!!");
                     e.printStackTrace();
+                }
+
+                if (filePath != null) {
+                    fileUploadService.createBucket(request.getDestHost(), request.getDestBucketName(), request.getDestObjectName());
+                    fileUploadService.createUploadTicket(request.getDestHost(), request.getDestBucketName(), request.getDestObjectName());
+                    fileUploadService.uploadFile(filePath, request.getDestHost(), request.getDestBucketName(), request.getDestObjectName());
+                    fileUploadService.completeUpload(request.getDestHost(), request.getDestBucketName(), request.getDestObjectName());
                 }
             }
         };

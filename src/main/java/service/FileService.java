@@ -17,12 +17,12 @@ public interface FileService {
      * @param videoPath
      * @param frameJump number of frames to skip per recorded frame
      */
-    public void convertVideoToJpg(String destBucketName, String videoPath, int frameJump) throws Exception;
+    void convertVideoToJpg(String destBucketName, String videoPath, int frameJump) throws Exception;
 
     /**
      * Convert existing frames to gif
      * @param destBucketName
      * @param targetFileName gif name input
      */
-    public void convertFramesToGif(String destBucketName, String targetFileName);
+    String convertFramesToGif(String destBucketName, String targetFileName);
 }
