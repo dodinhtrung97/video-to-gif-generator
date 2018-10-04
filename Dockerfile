@@ -1,6 +1,7 @@
 FROM openjdk:8-jdk
 COPY . /bin
 WORKDIR /bin
+VOLUME /bin/temp
 
 RUN apt-get update && apt-get install maven -y
 RUN mvn package

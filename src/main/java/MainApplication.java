@@ -48,7 +48,7 @@ public class MainApplication {
                 String srcHost = jsonObject.get("srcHost").toString();
                 String srctBucketName = jsonObject.get("srctBucketName").toString();
                 String srcObjectName = jsonObject.get("srcObjectName").toString();
-                String destHost = jsonObject.get("destBucketName").toString();
+                String destHost = jsonObject.get("destHost").toString();
                 String destBucketName = jsonObject.get("destBucketName").toString();
                 String destObjectName = jsonObject.get("destObjectName").toString();
 
